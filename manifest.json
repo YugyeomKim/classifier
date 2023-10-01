@@ -1,0 +1,19 @@
+{
+  "name": "classifier",
+  "id": "1282392620884377815",
+  "api": "1.0.0",
+  "main": "code.js",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "editorType": [
+    "figma"
+  ],
+  "networkAccess": {
+    "allowedDomains": [
+      "none"
+    ],
+    "devAllowedDomains": [
+      "http://localhost:3000"
+    ]
+  }
+}
