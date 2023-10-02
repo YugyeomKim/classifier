@@ -71,14 +71,17 @@ async function main() {
   const frames = figma.currentPage.selection
 
   /**
-   * Results from the model
+   * Results from the model if each parts is a button or not
    */
   const allResults = await Promise.allSettled(
     frames.map(async (frame) => {
       if (frame.type !== 'FRAME') {
         throw new Error('Not a frame')
       } else {
-        const nodes = frame.findAll((node) => node.type !== 'TEXT')
+        const nodes = frame.findAll((node) => (
+          node.type !== 'TEXT' &&
+          node.name !== 'button'
+        ))
         const classes = await Promise.all(nodes.map(getClass))
 
         return nodes.filter((_v, i) => classes[i] === 'button')
@@ -89,21 +92,21 @@ async function main() {
   /**
    * All the errors from the model
    */
-  const rejectReasons = []
+  const rejectReasons: any[] = []
   /**
    * All the buttons from the selected frames
    */
-  const allElements = allResults.reduce<SceneNode[]>((acc, cur) => {
+  const OriginalElementsFromModel = allResults.reduce<SceneNode[]>((acc, cur) => {
     if (cur.status === 'fulfilled') {
       return [...acc, ...cur.value]
     } else {
-      rejectReasons.push(cur)
+      rejectReasons.push(cur.reason)
       return acc
     }
   }, [])
 
   // Sort the buttons by width
-  allElements.sort((a, b) => a.width - b.width)
+  OriginalElementsFromModel.sort((a, b) => a.width - b.width)
 
   /**
    * Create a new page for the component library
@@ -138,7 +141,7 @@ async function main() {
   }
 
   // Put all elements vertically on the section
-  for (const element of allElements) {
+  for (const element of OriginalElementsFromModel) {
     const zIndexOfElement = getZIndex(element)
     const parts =
       element.parent?.findAll((node) => {
@@ -179,7 +182,7 @@ async function main() {
       const newInstance = component.createInstance()
       newInstance.x = element.x
       newInstance.y = element.y
-      element.parent?.appendChild(newInstance)
+      element.parent?.insertChild(zIndexOfElement, newInstance)
       tobeRemoved.push(element)
       parts.forEach((part) => tobeRemoved.push(part))
     }
@@ -195,7 +198,21 @@ async function main() {
   tobeRemoved.forEach((element) => element.remove())
 
   figma.currentPage = componentLibraryPage
-  figma.closePlugin('Done😊')
+
+  figma.showUI(__html__, { width: 400, height: 300 })
+  figma.ui.postMessage({ type: 'rejectReasons', rejectReasons })
+}
+
+figma.ui.onmessage = (msg) => {
+  switch (msg.type) {
+    case 'submit':
+      figma.closePlugin('Done😊')
+      break
+
+    default:
+      figma.closePlugin('Done😊')
+      break
+  }
 }
 
 main()

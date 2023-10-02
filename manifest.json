@@ -8,6 +8,7 @@
   "editorType": [
     "figma"
   ],
+  "ui": "ui.html",
   "networkAccess": {
     "allowedDomains": [
       "none"
