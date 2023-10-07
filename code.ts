@@ -108,20 +108,18 @@ const removeOverlap = (nodes: SceneNode[]): SceneNode[] => {
 
     const padding = 10
 
-    const overlap = acc.filter(
-      (other) =>{
-        const otherX = other.absoluteBoundingBox?.x
-        const otherY = other.absoluteBoundingBox?.y
-        if (!otherX || !otherY) return false
+    const overlap = acc.filter((other) => {
+      const otherX = other.absoluteBoundingBox?.x
+      const otherY = other.absoluteBoundingBox?.y
+      if (!otherX || !otherY) return false
 
-        return (
-          curX + padding < otherX + other.width &&
-          curX + cur.width > otherX + padding &&
-          curY + padding < otherY+ other.height &&
-          curY + cur.height > otherY + padding
-        )
-      }
-    )
+      return (
+        curX + padding < otherX + other.width &&
+        curX + cur.width > otherX + padding &&
+        curY + padding < otherY + other.height &&
+        curY + cur.height > otherY + padding
+      )
+    })
 
     if (overlap.length === 0) {
       return [...acc, cur]
@@ -203,7 +201,7 @@ async function main() {
    */
   const rejectReasons: any = {}
 
-  // Get all fulfilled elements (results) out of the allResults
+  // Get all fulfilled elements (results) out of the allResults from the model
   const {
     frameArray: frameArrayByModel,
     originalElementArray: originalElementArrayByModel,
@@ -233,6 +231,7 @@ async function main() {
     { frameArray: [], originalElementArray: [] }
   )
 
+  // Get all the elements that have the name 'button'
   const allResultsByName = frames.map((frame) => {
     if (frame.type !== 'FRAME') {
       /** @todo error handling */
@@ -250,6 +249,7 @@ async function main() {
     }
   })
 
+  // Get all frames matches to the elements
   const {
     frameArray: frameArrayByName,
     originalElementArray: originalElementArrayByName,
@@ -273,6 +273,7 @@ async function main() {
     }
   )
 
+  // Concat the results from the model and the results from the name
   const frameArrayConcat = frameArrayByModel.concat(frameArrayByName)
   const originalElementArrayConcat = originalElementArrayByModel.concat(
     originalElementArrayByName
@@ -322,20 +323,23 @@ async function main() {
 
   // Put all elements vertically on the section
   for (const element of originalElementArray) {
+    /** Absolute position x of the element */
     const elementX = element.absoluteBoundingBox?.x
+    /** Absolute position y of the element */
     const elementY = element.absoluteBoundingBox?.y
     if (!elementX || !elementY) continue
-    
+
     const zIndexOfElement = getZIndex(element)
+    /** All parts that is on the element. If the element is by name, it is empty array */
     const parts =
       element.name === 'button'
         ? []
         : element.parent?.findChildren((node) => {
-          const nodeX = node.absoluteBoundingBox?.x
-          const nodeY = node.absoluteBoundingBox?.y
-          if (!nodeX || !nodeY) return false
+            const nodeX = node.absoluteBoundingBox?.x
+            const nodeY = node.absoluteBoundingBox?.y
+            if (!nodeX || !nodeY) return false
 
-          const zIndexOfOther = getZIndex(node)
+            const zIndexOfOther = getZIndex(node)
             const padding = 10
             return (
               zIndexOfElement < zIndexOfOther &&
@@ -345,10 +349,12 @@ async function main() {
               nodeY + node.height < elementY + element.height + padding
             )
           }) || []
-
+    
+    // Clone the element and parts to put it in the component
     const newElement = element.clone()
     const newParts = parts.map((part) => part.clone())
 
+    // Create a component and put the element and parts in it
     const component = figma.createComponent()
     const newGroup = figma.group([newElement, ...newParts], component)
 
@@ -380,6 +386,7 @@ async function main() {
       newInstance.y = element.y
       element.parent?.insertChild(getZIndex(element), newInstance)
 
+      // Add the original element to the list of the elements to be removed
       tobeRemoved.push(element)
       tobeRemoved.push(...parts)
     }
@@ -393,10 +400,12 @@ async function main() {
 
   // Resize section to fit all the components
   section.resizeWithoutConstraints(maxX + 20, y)
+  // Remove all the elements that are replaced
   tobeRemoved.forEach((element) => element.remove())
 
   figma.currentPage = componentLibraryPage
 
+  // Show the ending page
   figma.showUI(__html__, { width: 400, height: 300 })
   figma.ui.postMessage({ type: 'rejectReasons', rejectReasons })
 }
