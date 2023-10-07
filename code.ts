@@ -304,8 +304,6 @@ async function main() {
   let x = 20
   let y = 20
   let maxX = 20
-  /** list of the elements that should be replaced (removed) */
-  const tobeRemoved = []
 
   /** Section to put in all the components */
   let section = componentLibraryPage.findChild(
@@ -355,40 +353,19 @@ async function main() {
     const newParts = parts.map((part) => part.clone())
 
     // Create a component and put the element and parts in it
-    const component = figma.createComponent()
-    const newGroup = figma.group([newElement, ...newParts], component)
+    const newGroup = figma.group([newElement, ...newParts], figma.currentPage)
+    section.appendChild(newGroup)
 
-    component.name = element.name
-    component.resizeWithoutConstraints(newGroup.width, newGroup.height)
-    component.x = x
-    component.y = y
-
-    newGroup.x = 0
-    newGroup.y = 0
+    newGroup.name = element.name
+    newGroup.x = x
+    newGroup.y = y
 
     if (newElement.type === 'INSTANCE') {
       newElement.detachInstance()
     }
 
-    figma.ungroup(newGroup)
-
-    section.appendChild(component)
-
-    // Replace the original element with the new component if the original element is not an instance nor a component
-    if (
-      element.type !== 'INSTANCE' &&
-      element.type !== 'COMPONENT' &&
-      !isInsideComponentOrInstance(element)
-    ) {
-      /** New instance to replace the original element */
-      const newInstance = component.createInstance()
-      newInstance.x = element.x
-      newInstance.y = element.y
-      element.parent?.insertChild(getZIndex(element), newInstance)
-
-      // Add the original element to the list of the elements to be removed
-      tobeRemoved.push(element)
-      tobeRemoved.push(...parts)
+    if (newGroup.children.length < 2){
+      figma.ungroup(newGroup)
     }
 
     // Update the position for the next element
@@ -400,8 +377,6 @@ async function main() {
 
   // Resize section to fit all the components
   section.resizeWithoutConstraints(maxX + 20, y)
-  // Remove all the elements that are replaced
-  tobeRemoved.forEach((element) => element.remove())
 
   figma.currentPage = componentLibraryPage
 
