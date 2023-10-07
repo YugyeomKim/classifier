@@ -1,4 +1,3 @@
-// hihi
 figma.skipInvisibleInstanceChildren = true
 
 /**
@@ -8,8 +7,6 @@ figma.skipInvisibleInstanceChildren = true
  */
 const indexToLabel = (index: number) => {
   switch (index) {
-    case 0:
-      return 'other'
     case 1:
       return 'button'
     default:
@@ -67,6 +64,117 @@ const getClass = async (node: SceneNode) => {
   }
 }
 
+/**
+ * Get class of children of the given node using getClass function recursively.
+ *
+ * if a child is 'button', it will return the node without checking the children of the child.
+ *
+ * Consequently, it return the list of nodes that are 'button'.
+ *
+ * @param node
+ * @returns {Promise<SceneNode[]>}
+ */
+const getElementsFromChildren = async (
+  node: SceneNode
+): Promise<SceneNode[]> => {
+  if (!('children' in node)) return []
+
+  const children = node.children
+  const classes = await Promise.all(children.map(getClass))
+
+  const buttonFromChildren = await Promise.all(
+    children
+      .filter((_v, i) => classes[i] !== 'button')
+      .map(getElementsFromChildren)
+  )
+  const buttonFromChildrenFlatten = ([] as SceneNode[]).concat(
+    ...buttonFromChildren
+  )
+
+  const buttons = children.filter((_v, i) => classes[i] === 'button')
+  return [...buttons, ...buttonFromChildrenFlatten]
+}
+
+/**
+ * Remove all nodes that overlap each other except the one with the largest area.
+ * @param nodes
+ * @returns {SceneNode[]} nodes that are not overlapped
+ */
+const removeOverlap = (nodes: SceneNode[]): SceneNode[] => {
+  const result = nodes.reduce<SceneNode[]>((acc, cur) => {
+    const curX = cur.absoluteBoundingBox?.x
+    const curY = cur.absoluteBoundingBox?.y
+    if (!curX || !curY) return acc
+
+    const padding = 10
+
+    const overlap = acc.filter(
+      (other) =>{
+        const otherX = other.absoluteBoundingBox?.x
+        const otherY = other.absoluteBoundingBox?.y
+        if (!otherX || !otherY) return false
+
+        return (
+          curX + padding < otherX + other.width &&
+          curX + cur.width > otherX + padding &&
+          curY + padding < otherY+ other.height &&
+          curY + cur.height > otherY + padding
+        )
+      }
+    )
+
+    if (overlap.length === 0) {
+      return [...acc, cur]
+    } else {
+      return acc
+    }
+  }, [])
+
+  return result
+}
+
+/**
+ * Find all the nodes that match the given condition.
+ *
+ * But don't look inside the nodes that match the condition
+ * @param node
+ * @param cb
+ */
+const findAll = (
+  node: SceneNode,
+  cb: (node: SceneNode) => boolean
+): SceneNode[] => {
+  if (!('children' in node)) return [] as SceneNode[]
+
+  const children = node.children
+  const result = children.reduce((acc, cur) => {
+    if (cb(cur)) {
+      return [...acc, cur]
+    } else {
+      return [...acc, ...findAll(cur, cb)]
+    }
+  }, [] as SceneNode[])
+
+  return result
+}
+
+/**
+ * Check if the given node is inside of a component or instance.
+ * @param node
+ * @returns {boolean}
+ */
+const isInsideComponentOrInstance = (node: SceneNode): boolean => {
+  if (!node.parent) return false
+
+  if (node.parent.type === 'COMPONENT' || node.parent.type === 'INSTANCE') {
+    return true
+  } else {
+    if (node.parent.type === 'DOCUMENT' || node.parent.type === 'PAGE')
+      return false
+    return isInsideComponentOrInstance(node.parent)
+  }
+}
+
 async function main() {
   const frames = figma.currentPage.selection
 
@@ -78,13 +186,14 @@ async function main() {
       if (frame.type !== 'FRAME') {
         throw new Error('Not a frame')
       } else {
-        const nodes = frame.findAll((node) => (
-          node.type !== 'TEXT' &&
-          node.name !== 'button'
-        ))
-        const classes = await Promise.all(nodes.map(getClass))
+        const elementsWithOverlap = await getElementsFromChildren(frame)
 
-        return nodes.filter((_v, i) => classes[i] === 'button')
+        const elements = removeOverlap(elementsWithOverlap)
+
+        return {
+          frame,
+          elements,
+        }
       }
     })
   )
@@ -92,21 +201,92 @@ async function main() {
   /**
    * All the errors from the model
    */
-  const rejectReasons: any[] = []
-  /**
-   * All the buttons from the selected frames
-   */
-  const OriginalElementsFromModel = allResults.reduce<SceneNode[]>((acc, cur) => {
-    if (cur.status === 'fulfilled') {
-      return [...acc, ...cur.value]
-    } else {
-      rejectReasons.push(cur.reason)
-      return acc
+  const rejectReasons: any = {}
+
+  // Get all fulfilled elements (results) out of the allResults
+  const {
+    frameArray: frameArrayByModel,
+    originalElementArray: originalElementArrayByModel,
+  } = allResults.reduce<{
+    frameArray: FrameNode[]
+    originalElementArray: SceneNode[]
+  }>(
+    (acc, cur) => {
+      if (cur.status === 'fulfilled') {
+        const newFrameArray: FrameNode[] = new Array(
+          cur.value.elements.length
+        ).fill(cur.value.frame)
+
+        return {
+          frameArray: [...acc.frameArray, ...newFrameArray],
+          originalElementArray: [
+            ...acc.originalElementArray,
+            ...cur.value.elements,
+          ],
+        }
+      } else {
+        rejectReasons[cur.reason] = (rejectReasons[cur.reason] || 0) + 1
+
+        return acc
+      }
+    },
+    { frameArray: [], originalElementArray: [] }
+  )
+
+  const allResultsByName = frames.map((frame) => {
+    if (frame.type !== 'FRAME') {
+      /** @todo error handling */
+      figma.notify('Not a frame', { error: true })
+      return {} as { frame: FrameNode; elements: SceneNode[] }
     }
-  }, [])
+
+    const elements = findAll(
+      frame,
+      (node) => node.type !== 'TEXT' && node.name === 'button'
+    )
+    return {
+      frame,
+      elements,
+    }
+  })
+
+  const {
+    frameArray: frameArrayByName,
+    originalElementArray: originalElementArrayByName,
+  } = allResultsByName.reduce<{
+    frameArray: FrameNode[]
+    originalElementArray: SceneNode[]
+  }>(
+    (acc, cur) => {
+      const newFrameArray: FrameNode[] = new Array(cur.elements.length).fill(
+        cur.frame
+      )
+
+      return {
+        frameArray: [...acc.frameArray, ...newFrameArray],
+        originalElementArray: [...acc.originalElementArray, ...cur.elements],
+      }
+    },
+    {
+      frameArray: [],
+      originalElementArray: [],
+    }
+  )
+
+  const frameArrayConcat = frameArrayByModel.concat(frameArrayByName)
+  const originalElementArrayConcat = originalElementArrayByModel.concat(
+    originalElementArrayByName
+  )
 
   // Sort the buttons by width
-  OriginalElementsFromModel.sort((a, b) => a.width - b.width)
+  const indices = Array.from(originalElementArrayConcat.keys())
+  indices.sort(
+    (a, b) =>
+      originalElementArrayConcat[a].width - originalElementArrayConcat[b].width
+  )
+
+  const frameArray = indices.map((i) => frameArrayConcat[i])
+  const originalElementArray = indices.map((i) => originalElementArrayConcat[i])
 
   /**
    * Create a new page for the component library
@@ -128,12 +308,12 @@ async function main() {
 
   /** Section to put in all the components */
   let section = componentLibraryPage.findChild(
-    (node) => node.name === 'Buttons' && node.type === 'SECTION'
+    (node) => node.name === 'BUTTONS' && node.type === 'SECTION'
   ) as SectionNode | null
 
   if (!section) {
     section = figma.createSection()
-    section.name = 'Buttons'
+    section.name = 'BUTTONS'
     componentLibraryPage.appendChild(section)
   } else {
     maxX = section.width - 20
@@ -141,22 +321,32 @@ async function main() {
   }
 
   // Put all elements vertically on the section
-  for (const element of OriginalElementsFromModel) {
+  for (const element of originalElementArray) {
+    const elementX = element.absoluteBoundingBox?.x
+    const elementY = element.absoluteBoundingBox?.y
+    if (!elementX || !elementY) continue
+    
     const zIndexOfElement = getZIndex(element)
     const parts =
-      element.parent?.findAll((node) => {
-        const zIndexOfOther = getZIndex(node)
-        return (
-          zIndexOfElement < zIndexOfOther &&
-          node.x > element.x &&
-          node.x + node.width < element.x + element.width &&
-          node.y > element.y &&
-          node.y + node.height < element.y + element.height
-        )
-      }) || []
+      element.name === 'button'
+        ? []
+        : element.parent?.findChildren((node) => {
+          const nodeX = node.absoluteBoundingBox?.x
+          const nodeY = node.absoluteBoundingBox?.y
+          if (!nodeX || !nodeY) return false
+
+          const zIndexOfOther = getZIndex(node)
+            const padding = 10
+            return (
+              zIndexOfElement < zIndexOfOther &&
+              nodeX + padding > elementX &&
+              nodeX + node.width < elementX + element.width + padding &&
+              nodeY + padding > elementY &&
+              nodeY + node.height < elementY + element.height + padding
+            )
+          }) || []
 
     const newElement = element.clone()
-
     const newParts = parts.map((part) => part.clone())
 
     const component = figma.createComponent()
@@ -174,19 +364,27 @@ async function main() {
       newElement.detachInstance()
     }
 
+    figma.ungroup(newGroup)
+
     section.appendChild(component)
 
     // Replace the original element with the new component if the original element is not an instance nor a component
-    if (element.type !== 'INSTANCE' && element.type !== 'COMPONENT') {
+    if (
+      element.type !== 'INSTANCE' &&
+      element.type !== 'COMPONENT' &&
+      !isInsideComponentOrInstance(element)
+    ) {
       /** New instance to replace the original element */
       const newInstance = component.createInstance()
       newInstance.x = element.x
       newInstance.y = element.y
-      element.parent?.insertChild(zIndexOfElement, newInstance)
+      element.parent?.insertChild(getZIndex(element), newInstance)
+
       tobeRemoved.push(element)
-      parts.forEach((part) => tobeRemoved.push(part))
+      tobeRemoved.push(...parts)
     }
 
+    // Update the position for the next element
     y += element.height + 20
     if (x + element.width > maxX) {
       maxX = x + element.width
