@@ -1,0 +1,35 @@
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/thomas-lowry/figma-plugin-ds/dist/figma-plugin-ds.css"
+    />
+    <style>
+      div.title {
+        font-size: 24px;
+        text-align: center;
+        padding: 10px 0px 10px 0px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="type type--xlarge type--bold title">Result</div>
+
+    <h6>설명</h6>
+
+    <div class="container">
+      <div>
+        no list
+      </div>
+
+      <button id="adjust">adjust</button>
+    </div>
+
+    <script>
+      document.getElementById('adjust').addEventListener('click', () => {
+        parent.postMessage({ pluginMessage: { type: 'ending-survey' } }, '*')
+      })
+    </script>
+  </body>
+</html>

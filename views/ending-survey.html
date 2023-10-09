@@ -1,0 +1,41 @@
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/thomas-lowry/figma-plugin-ds/dist/figma-plugin-ds.css"
+    />
+    <style>
+      div.title {
+        font-size: 24px;
+        text-align: center;
+        padding: 10px 0px 10px 0px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="type type--xlarge type--bold title">Ending Survey</div>
+
+    <div class="container">
+      <label for="survey1">survey1</label>  
+      <input type="text" class="survey-input" name="survey1" id="survey1">
+      <label for="survey2">survey2</label>  
+      <input type="text" class="survey-input" name="survey2" id="survey2">
+
+      <button id="submit">submit</button>
+    </div>
+
+    <script>
+      const surveyInputsEl = document.querySelectorAll('.survey-input')
+      
+      document.getElementById('submit').addEventListener('click', () => {
+        const surveyInputs = {
+          survey1: surveyInputsEl[0].value,
+          survey2: surveyInputsEl[1].value,
+        }
+        
+        parent.postMessage({ pluginMessage: { type: 'submit', data: surveyInputs } }, '*')
+      })
+    </script>
+  </body>
+</html>

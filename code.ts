@@ -1,5 +1,7 @@
 figma.skipInvisibleInstanceChildren = true
 
+const SERVER = 'http://localhost:3000'
+
 /**
  * Returns the label for the given index
  * @param index
@@ -44,7 +46,7 @@ const getClass = async (node: SceneNode) => {
   /**
    * Fetch result from the model to predict the class
    */
-  const modelResult = await fetch('http://localhost:3000/predict', {
+  const modelResult = await fetch(`${SERVER}/predict`, {
     method: 'POST',
     body: bytes,
   })
@@ -380,21 +382,84 @@ async function main() {
 
   figma.currentPage = componentLibraryPage
 
-  // Show the ending page
-  figma.showUI(__html__, { width: 400, height: 300 })
-  figma.ui.postMessage({ type: 'rejectReasons', rejectReasons })
+  // Show the result page
+  figma.showUI(__uiFiles__.result, { width: 400, height: 300 })
 }
 
-figma.ui.onmessage = (msg) => {
+/**
+ * Send the survey data to the server
+ * @param data 
+ */
+const sendSurveyData = async (data: any) => {
+  console.log(data);
+  
+  if (!data.email) {
+    const email = await figma.clientStorage.getAsync('email')
+    if (email === undefined) {
+      data.email = 'anonymous'
+    } else {
+      data.email = email
+    }
+  }
+  
+  const result = await fetch(`${SERVER}/survey`, {
+    method: 'POST',
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!result.ok) {
+    const errorMessage = await result.text()
+    console.error(`Error: ${errorMessage}`)
+  } else {
+    const successMessage = await result.text()
+    console.log(successMessage)
+  }
+}
+
+figma.ui.onmessage = async (msg) => {
   switch (msg.type) {
+    case 'setting':
+      figma.showUI(__uiFiles__.setting, { width: 400, height: 300 })
+
+      break
+
+    case 'run':
+      const { email } = msg.data
+      await figma.clientStorage.setAsync('email', email)
+      sendSurveyData(msg.data)
+
+      main()
+      
+      break
+
+    case 'ending-survey':
+      /** @todo edit the buttons */
+      figma.showUI(__uiFiles__.endingSurvey, { width: 400, height: 300 })
+
+      break
+    
     case 'submit':
-      figma.closePlugin('Done😊')
+      await sendSurveyData(msg.data)
+      figma.closePlugin('Thank you😊')
+      
       break
 
     default:
-      figma.closePlugin('Done😊')
+      figma.closePlugin('You should not see this message.')
+      
       break
   }
 }
 
-main()
+switch (figma.command) {
+  case 'howToUse':
+    figma.showUI(__uiFiles__.tutorial, { width: 400, height: 300 })
+    break;
+  
+  default:
+    figma.showUI(__uiFiles__.setting, { width: 400, height: 300 })
+    break;
+}

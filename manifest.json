@@ -5,16 +5,19 @@
   "main": "code.js",
   "capabilities": [],
   "enableProposedApi": false,
-  "editorType": [
-    "figma"
+  "editorType": ["figma"],
+  "ui": {
+    "tutorial": "views/tutorial.html",
+    "setting": "views/setting.html",
+    "result": "views/result.html",
+    "endingSurvey": "views/ending-survey.html"
+  },
+  "menu": [
+    { "name": "How to use", "command": "howToUse" },
+    { "name": "Run", "command": "run" }
   ],
-  "ui": "ui.html",
   "networkAccess": {
-    "allowedDomains": [
-      "none"
-    ],
-    "devAllowedDomains": [
-      "http://localhost:3000"
-    ]
+    "allowedDomains": ["none"],
+    "devAllowedDomains": ["http://localhost:3000"]
   }
 }

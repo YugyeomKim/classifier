@@ -1,0 +1,98 @@
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/thomas-lowry/figma-plugin-ds/dist/figma-plugin-ds.css"
+    />
+    <style>
+      div.topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 20px 10px 20px;
+      }
+
+      div.title {
+        font-size: 24px;
+        /* text-align: center; */
+        /* padding: 10px 0px 10px 0px; */
+      }
+
+      div.horizontal {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 20px 10px 20px;
+      }
+
+      .center {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 100%;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="topbar">
+      <div class="type type--xlarge type--bold title">Tutorial</div>
+      <button id="skip" class="button button--tertiary">Skip</button>
+    </div>
+
+    <img class="center" id="tutorial-image" alt="tutorial image" />
+
+    <div class="horizontal">
+      <button id="prev" class="button button--secondary" disabled>Prev</button>
+      <button id="next" class="button button--primary">Next</button>
+    </div>
+
+    <script>
+      let index = 0
+
+      const images = [
+        'https://lh3.googleusercontent.com/pw/ADCreHc3pyLZoE_7Cqlj-7XTbjURPn8tfJQhsoGdBUfmSw_pUlXJeLxn0puN1YAGCfGMVdY6QRSDW0nXyNHqZn1jU7lv6LyPPswSiBHvgkx6eGVVtGrg4bhDlcfIloMkpX1YwLcBg6qY4jIg4LVG6osTo9RHUQc1ypwWTL60-F_kLI7W9HbK2SgGATt_3PUcxQsevmCbTf9AY-hkXBFhBfpzGuQjYL-4pGhmQuYk2D65RU9vcRM1a27m71uFBuvp4DUtXKCrTrQYhe--T2pOaW-cmdeEEJ0_iCf7qPIq2LAbdsjZNz9kuxUsIDMRnQEP7bxTAYaVwoQgAPbv2o7kXyR1SskCLhgScTLdkpgCze4KFGb0Lh8eZvU3k2ywmDB_mOi9X32W9KzgDYU5LMp1H6nRnNpo4aJ-f6D2DQ6sgSzusKF29GkbFA2csYRFZwczSVxsh3lOmbThOvwinQROSfGTvpw4JdQ4-M1H7RK0r40_ee3If5b69PQ9271_GqNjaR-jpWyQaS3RE8C6FGPtp7DVTcmdmJO2dptwvJnArfGqMAhuGU8N8UWbSKAZGCBF7UVXf-ed9QVx6OL46H9clmsU9L9xc_DGiPy-ips5LQ06hak3lK6Oy65-mWSEAbuFL0dZ3GPW99AwlU4nxlAIJPLIsMZMCESEXgOkg_5FN99GQhPE6ntxU4nx3ef74IQfTF6D0D-ry5wfHwuS2iATvzlXVkRv6EH17Gs3BZDQNm0duKEv4ZEumyUuOUS6BKOAcBs3Csgp37JZmBCfkq34RTJIGPGWUZ5ixUrwqKzCQgzjtxf-HygUpRmM0LKGDfw6-8hRE1TRcvGMU1cGrL0UmAY87ZVXqVNOgL5v7BWoxcQAuEl4EwpJg3o2bGIsxpxrdCbtSlNYa16L8D_HUhGAHKVFiVi7hA=w215-h234-s-no?authuser=0',
+        'https://i.imgur.com/oYgvCyW.jpeg',
+        'https://i.imgur.com/fEvWUbi.jpeg',
+      ]
+      const tutorialImageEl = document.getElementById('tutorial-image')
+      tutorialImageEl.src = images[index]
+
+      const skipButtonEl = document.getElementById('skip')
+      const prevButtonEl = document.getElementById('prev')
+      const nextButtonEl = document.getElementById('next')
+
+      skipButtonEl.addEventListener('click', () => {
+        parent.postMessage({ pluginMessage: { type: 'setting' } }, '*')
+      })
+
+      prevButtonEl.addEventListener('click', () => {
+        if (index === 1) {
+          prevButtonEl.disabled = true
+        }
+
+        if (index > 0) {
+          index = index - 1
+          tutorialImageEl.src = images[index]
+        }
+      })
+
+      nextButtonEl.addEventListener('click', () => {
+        if (index === 0) {
+          prevButtonEl.disabled = false
+        }
+        
+        if (index === images.length - 2) {
+          nextButtonEl.textContent = 'Finish'
+        }
+
+        if (index < images.length - 1) {
+          index = index + 1
+          tutorialImageEl.src = images[index]
+        } else {
+          parent.postMessage({ pluginMessage: { type: 'setting' } }, '*')
+        }
+      })
+    </script>
+  </body>
+</html>

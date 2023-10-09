@@ -1,0 +1,42 @@
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/thomas-lowry/figma-plugin-ds/dist/figma-plugin-ds.css"
+    />
+    <style>
+      div.title {
+        font-size: 24px;
+        text-align: center;
+        padding: 10px 0px 10px 0px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="type type--xlarge type--bold title">Setting</div>
+
+    <div class="container">
+      <label for="email">email</label>  
+      <input type="text" class="survey-input" name="email" id="email">
+      <label for="companyCategory">companyCategory</label>  
+      <input type="text" class="survey-input" name="companyCategory" id="companyCategory">
+
+      <button id="run">run</button>
+    </div>
+
+    <script>
+      const surveyInputsEl = document.querySelectorAll('.survey-input')
+      
+      document.getElementById('run').addEventListener('click', () => {
+        const surveyInputs = {
+          type: 'running',
+          email: surveyInputsEl[0].value,
+          companyCategory: surveyInputsEl[1].value,
+        }
+        
+        parent.postMessage({ pluginMessage: { type: 'run', data: surveyInputs } }, '*')
+      })
+    </script>
+  </body>
+</html>
