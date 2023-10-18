@@ -5,65 +5,116 @@
       href="https://cdn.jsdelivr.net/gh/thomas-lowry/figma-plugin-ds/dist/figma-plugin-ds.css"
     />
     <style>
-      div.topbar {
+      .Container {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px 20px 10px 20px;
+        flex-direction: column;
+        height: 100%;
       }
 
-      div.title {
-        font-size: 24px;
-        /* text-align: center; */
-        /* padding: 10px 0px 10px 0px; */
-      }
-
-      div.horizontal {
+      .ImageContainer {
         display: flex;
-        justify-content: space-between;
+        flex-direction: column;
         align-items: center;
-        padding: 10px 20px 10px 20px;
+        justify-content: center;
+        height: calc(100% - 40px);
+
+        gap: 20px;
+
+        white-space: pre-wrap;
       }
 
-      .center {
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
+      .ImageContainer img {
+        height: 176px;
+      }
+
+      .ImageContainer #explanation {
+        color: #707070;
+        font-size: 10px;
+        text-align: center;
+      }
+
+      .bottom__bar {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+
+        position: absolute;
+        bottom: 0px;
+
         width: 100%;
+        height: 40px;
+        padding: 5px;
+        border-top: 1px solid #ebebeb;
+
+        background: #ffffff;
+      }
+
+      .bottom__bar button {
+        width: 76px;
+        height: 28px;
+        display: flex;
+        justify-content: center;
+      }
+
+      .PrevAndAgree {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+
+        gap: 9px;
+      }
+
+      #prev {
+        background: #f4f4f4;
+        color: #b1b1b1;
       }
     </style>
   </head>
 
   <body>
-    <div class="topbar">
-      <div class="type type--xlarge type--bold title">Tutorial</div>
-      <button id="skip" class="button button--tertiary">Skip</button>
-    </div>
+    <div class="Container">
+      <div class="ImageContainer">
+        <img id="tutorial-image" alt="tutorial image" />
+        <p id="explanation" class="type type--small"></p>
+      </div>
 
-    <img class="center" id="tutorial-image" alt="tutorial image" />
-
-    <div class="horizontal">
-      <button id="prev" class="button button--secondary" disabled>Prev</button>
-      <button id="next" class="button button--primary">Next</button>
+      <div class="bottom__bar">
+        <button id="skip" class="button button--tertiary">Skip</button>
+        <div class="PrevAndAgree">
+          <button id="prev" class="button button--primary">Prev</button>
+          <button id="agree" class="button button--primary">Agree</button>
+        </div>
+      </div>
     </div>
 
     <script>
       let index = 0
 
       const images = [
-        'https://lh3.googleusercontent.com/pw/ADCreHc3pyLZoE_7Cqlj-7XTbjURPn8tfJQhsoGdBUfmSw_pUlXJeLxn0puN1YAGCfGMVdY6QRSDW0nXyNHqZn1jU7lv6LyPPswSiBHvgkx6eGVVtGrg4bhDlcfIloMkpX1YwLcBg6qY4jIg4LVG6osTo9RHUQc1ypwWTL60-F_kLI7W9HbK2SgGATt_3PUcxQsevmCbTf9AY-hkXBFhBfpzGuQjYL-4pGhmQuYk2D65RU9vcRM1a27m71uFBuvp4DUtXKCrTrQYhe--T2pOaW-cmdeEEJ0_iCf7qPIq2LAbdsjZNz9kuxUsIDMRnQEP7bxTAYaVwoQgAPbv2o7kXyR1SskCLhgScTLdkpgCze4KFGb0Lh8eZvU3k2ywmDB_mOi9X32W9KzgDYU5LMp1H6nRnNpo4aJ-f6D2DQ6sgSzusKF29GkbFA2csYRFZwczSVxsh3lOmbThOvwinQROSfGTvpw4JdQ4-M1H7RK0r40_ee3If5b69PQ9271_GqNjaR-jpWyQaS3RE8C6FGPtp7DVTcmdmJO2dptwvJnArfGqMAhuGU8N8UWbSKAZGCBF7UVXf-ed9QVx6OL46H9clmsU9L9xc_DGiPy-ips5LQ06hak3lK6Oy65-mWSEAbuFL0dZ3GPW99AwlU4nxlAIJPLIsMZMCESEXgOkg_5FN99GQhPE6ntxU4nx3ef74IQfTF6D0D-ry5wfHwuS2iATvzlXVkRv6EH17Gs3BZDQNm0duKEv4ZEumyUuOUS6BKOAcBs3Csgp37JZmBCfkq34RTJIGPGWUZ5ixUrwqKzCQgzjtxf-HygUpRmM0LKGDfw6-8hRE1TRcvGMU1cGrL0UmAY87ZVXqVNOgL5v7BWoxcQAuEl4EwpJg3o2bGIsxpxrdCbtSlNYa16L8D_HUhGAHKVFiVi7hA=w215-h234-s-no?authuser=0',
-        'https://i.imgur.com/oYgvCyW.jpeg',
-        'https://i.imgur.com/fEvWUbi.jpeg',
+        'https://i.imgur.com/cMAWLE0.png',
+        'https://i.imgur.com/gc26ahW.png',
+        'https://i.imgur.com/BRHgUTU.png',
       ]
+
+      const explanation = [
+        'New section will be generated\nEvery components are included in this section',
+        'If you want to eliminate some components,\nselect the option by clicking checkbox.\nPress Adjust when editing is done.',
+        'You can see the changes reflected!\nUnnecessary elements will have been removed.\nRepeat for additional modifications.',
+      ]
+
       const tutorialImageEl = document.getElementById('tutorial-image')
+      const explanationEl = document.getElementById('explanation')
       tutorialImageEl.src = images[index]
+      explanationEl.innerText = explanation[index]
 
       const skipButtonEl = document.getElementById('skip')
       const prevButtonEl = document.getElementById('prev')
-      const nextButtonEl = document.getElementById('next')
+      const agreeButtonEl = document.getElementById('agree')
 
       skipButtonEl.addEventListener('click', () => {
-        parent.postMessage({ pluginMessage: { type: 'setting' } }, '*')
+        parent.postMessage({ pluginMessage: { type: 'tutorial-end' } }, '*')
       })
 
       prevButtonEl.addEventListener('click', () => {
@@ -74,23 +125,21 @@
         if (index > 0) {
           index = index - 1
           tutorialImageEl.src = images[index]
+          explanationEl.innerText = explanation[index]
         }
       })
 
-      nextButtonEl.addEventListener('click', () => {
+      agreeButtonEl.addEventListener('click', () => {
         if (index === 0) {
           prevButtonEl.disabled = false
-        }
-        
-        if (index === images.length - 2) {
-          nextButtonEl.textContent = 'Finish'
         }
 
         if (index < images.length - 1) {
           index = index + 1
           tutorialImageEl.src = images[index]
+          explanationEl.innerText = explanation[index]
         } else {
-          parent.postMessage({ pluginMessage: { type: 'setting' } }, '*')
+          parent.postMessage({ pluginMessage: { type: 'tutorial-end' } }, '*')
         }
       })
     </script>

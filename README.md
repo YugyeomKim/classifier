@@ -3,6 +3,8 @@
 
 - 예외문구 처리
 
+- Rearrange after adjusting
+
 - 첨삭
   - 모아보기
   - 수정할 때 수정하기
@@ -20,3 +22,4 @@
 - labeled data 추가 학습
   
 ## 배포
+- health check

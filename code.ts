@@ -1,6 +1,7 @@
 figma.skipInvisibleInstanceChildren = true
 
-const SERVER = 'http://localhost:3000'
+const SERVER = 'https://s2dlab.click:443'
+// const SERVER = 'http://localhost:3000'
 
 /**
  * Returns the label for the given index
@@ -175,8 +176,15 @@ const isInsideComponentOrInstance = (node: SceneNode): boolean => {
   }
 }
 
+let frameArray: FrameNode[] = []
+let originalPage: PageNode = figma.currentPage
+/** Copied new elements */
+let newElementArray: SceneNode[] = []
+
+
 async function main() {
   const frames = figma.currentPage.selection
+  originalPage = figma.currentPage
 
   /**
    * Results from the model if each parts is a button or not
@@ -288,7 +296,7 @@ async function main() {
       originalElementArrayConcat[a].width - originalElementArrayConcat[b].width
   )
 
-  const frameArray = indices.map((i) => frameArrayConcat[i])
+  frameArray = indices.map((i) => frameArrayConcat[i])
   const originalElementArray = indices.map((i) => originalElementArrayConcat[i])
 
   /**
@@ -349,9 +357,13 @@ async function main() {
               nodeY + node.height < elementY + element.height + padding
             )
           }) || []
-    
+
     // Clone the element and parts to put it in the component
-    const newElement = element.clone()
+    let newElement = element.clone()
+    if (newElement.type === 'INSTANCE') {
+      newElement = newElement.detachInstance()
+    }
+
     const newParts = parts.map((part) => part.clone())
 
     // Create a component and put the element and parts in it
@@ -362,12 +374,11 @@ async function main() {
     newGroup.x = x
     newGroup.y = y
 
-    if (newElement.type === 'INSTANCE') {
-      newElement.detachInstance()
-    }
-
-    if (newGroup.children.length < 2){
+    if (newGroup.children.length < 2) {
       figma.ungroup(newGroup)
+      newElementArray.push(newElement)
+    } else {
+      newElementArray.push(newGroup)
     }
 
     // Update the position for the next element
@@ -381,18 +392,34 @@ async function main() {
   section.resizeWithoutConstraints(maxX + 20, y)
 
   figma.currentPage = componentLibraryPage
+  
+  const thumbnails = await Promise.all(
+    newElementArray.map((element) =>
+      element.exportAsync({
+        format: 'PNG',
+        constraint: { type: 'SCALE', value: 1 },
+      })
+    )
+  )
+
+  const elementNames = newElementArray.map((element) => element.name)
 
   // Show the result page
-  figma.showUI(__uiFiles__.result, { width: 400, height: 300 })
+  figma.showUI(__uiFiles__.result, { width: 225, height: 355 })
+
+  figma.ui.postMessage({
+    type: 'result',
+    frameArray,
+    thumbnails,
+    elementNames,
+  })
 }
 
 /**
  * Send the survey data to the server
- * @param data 
+ * @param data
  */
 const sendSurveyData = async (data: any) => {
-  console.log(data);
-  
   if (!data.email) {
     const email = await figma.clientStorage.getAsync('email')
     if (email === undefined) {
@@ -401,11 +428,11 @@ const sendSurveyData = async (data: any) => {
       data.email = email
     }
   }
-  
+
   const result = await fetch(`${SERVER}/survey`, {
     method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
   })
@@ -415,51 +442,106 @@ const sendSurveyData = async (data: any) => {
     console.error(`Error: ${errorMessage}`)
   } else {
     const successMessage = await result.text()
-    console.log(successMessage)
+    console.log(`Send user data: ${successMessage}`)
   }
 }
 
 figma.ui.onmessage = async (msg) => {
   switch (msg.type) {
+    case 'tutorial-end':
+      figma.showUI(__uiFiles__.start, { width: 319, height: 360 })
+
+      break
+
     case 'setting':
-      figma.showUI(__uiFiles__.setting, { width: 400, height: 300 })
+      figma.showUI(__uiFiles__.setting, { width: 220, height: 355 })
+
+      figma.clientStorage.keysAsync().then((keys) =>
+        keys.map((key) =>
+          figma.clientStorage.getAsync(key).then((value) => {
+            if (value) {
+              figma.ui.postMessage({
+                type: 'setting',
+                key,
+                value,
+              })
+            }
+          })
+        )
+      )
+
+      break
+
+    case 'instruction':
+      figma.showUI(__uiFiles__.runInstruction, { width: 220, height: 355 })
+
+      await Promise.all(
+        Object.keys(msg.data).map((key) => {
+          if (key === 'type') return
+          figma.clientStorage.setAsync(key, msg.data[key])
+        })
+      )
+
+      sendSurveyData(msg.data)
 
       break
 
     case 'run':
-      const { email } = msg.data
-      await figma.clientStorage.setAsync('email', email)
-      sendSurveyData(msg.data)
-
-      main()
-      
-      break
-
-    case 'ending-survey':
-      /** @todo edit the buttons */
-      figma.showUI(__uiFiles__.endingSurvey, { width: 400, height: 300 })
+      figma.showUI(__uiFiles__.loading, { width: 220, height: 355 })
+      await main()
 
       break
-    
+
+    case 'zoom-element':
+      const { index } = msg
+      figma.currentPage = originalPage
+      figma.viewport.scrollAndZoomIntoView([frameArray[index]])
+
+      break
+
+    case 'wrapup':
+      const { data: notChecked } = msg
+      notChecked.map((index: number) => {
+        newElementArray[index].remove()
+      })
+
+      figma.showUI(__uiFiles__.endingSurvey, { width: 220, height: 355 })
+
+      break
+
     case 'submit':
       await sendSurveyData(msg.data)
       figma.closePlugin('Thank you😊')
-      
+
       break
 
     default:
       figma.closePlugin('You should not see this message.')
-      
+
       break
   }
 }
 
 switch (figma.command) {
   case 'howToUse':
-    figma.showUI(__uiFiles__.tutorial, { width: 400, height: 300 })
-    break;
-  
+    figma.showUI(__uiFiles__.tutorial, { width: 319, height: 360 })
+
+    break
+
+  case 'clean':
+    figma.clientStorage.keysAsync().then((keys) => {
+      keys.map((key) => {
+        figma.clientStorage.deleteAsync(key)
+      })
+    }).then(() => [
+      figma.closePlugin("Cleaned all the data. You're good to go!")
+    ])
+
+    break
+
+
   default:
-    figma.showUI(__uiFiles__.setting, { width: 400, height: 300 })
-    break;
+    figma.showUI(__uiFiles__.start, { width: 319, height: 360 })
+
+    break
 }

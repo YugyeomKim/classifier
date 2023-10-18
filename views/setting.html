@@ -5,38 +5,223 @@
       href="https://cdn.jsdelivr.net/gh/thomas-lowry/figma-plugin-ds/dist/figma-plugin-ds.css"
     />
     <style>
-      div.title {
-        font-size: 24px;
-        text-align: center;
-        padding: 10px 0px 10px 0px;
+      .Container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+
+        gap: 5px;
+
+        /* height: 280px; */
+        width: 100%;
+        padding: 15px 24px 13px 15px;
+      }
+
+      .type__grey {
+        color: #707070;
+        margin-bottom: 5px;
+        font-size: 10px;
+      }
+
+      .input__box {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+      }
+
+      .input__label {
+        font-size: 8px;
+        color: #000;
+      }
+
+      .input__box {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+
+        width: 180px;
+        height: 32px;
+        border-radius: 5px;
+        border: 1px solid #707070;
+        padding: 0px 5px 0px 5px;
+
+        font-size: 10px;
+      }
+
+      .input__box input {
+        flex-grow: 1;
+
+        border: none;
+      }
+
+      .input__box select {
+        flex-grow: 1;
+
+        border: none;
+      }
+
+      .bottom__bar {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+
+        position: absolute;
+        bottom: 0px;
+
+        width: 100%;
+        height: 40px;
+        padding: 5px;
+        border-top: 1px solid #ebebeb;
+
+        background: #ffffff;
+      }
+
+      #submit {
+        width: 76px;
+        height: 28px;
+        display: flex;
+        justify-content: center;
       }
     </style>
   </head>
 
   <body>
-    <div class="type type--xlarge type--bold title">Setting</div>
+    <div class="Container">
+      <div class="type type--small type__grey">
+        Fill in the form to activate plugin
+      </div>
 
-    <div class="container">
-      <label for="email">email</label>  
-      <input type="text" class="survey-input" name="email" id="email">
-      <label for="companyCategory">companyCategory</label>  
-      <input type="text" class="survey-input" name="companyCategory" id="companyCategory">
+      <div class="input__container">
+        <div class="input__label type">Email</div>
+        <div class="input__box">
+          <input
+            id="email"
+            type="input"
+            class="type"
+            placeholder="hi@gmail.com"
+          />
+        </div>
+      </div>
 
-      <button id="run">run</button>
+      <div class="input__container">
+        <div class="input__label type">Organization Type</div>
+        <div class="input__box">
+          <select id="organization_type" class="select__menu type">
+            <option value="blank" disabled selected style="color: #707070">
+              Select organization type
+            </option>
+            <option value="student">Student</option>
+            <option value="freelancer">Freelancer</option>
+            <option value="sole-proprietor">Sole Proprietor</option>
+            <option value="startup">Startup</option>
+            <option value="smb">SMB</option>
+            <option value="large-corporation">Large Corporation</option>
+            <option value="agency">Agency</option>
+            <option value="etc">etc</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="input__container">
+        <div class="input__label type">Organization Size</div>
+        <div class="input__box">
+          <select id="organization_size" class="select__menu type">
+            <option value="blank" disabled selected style="color: #707070">
+              Select organization size
+            </option>
+            <option value="1">1</option>
+            <option value="2-5">2-5</option>
+            <option value="6-10">6-10</option>
+            <option value="11-50">11-50</option>
+            <option value="51-100">51-100</option>
+            <option value="101-1000">101-1000</option>
+            <option value="1000+">1000+</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="input__container">
+        <div class="input__label type">Usage</div>
+        <div class="input__box">
+          <input
+            id="usage"
+            type="input"
+            class="type"
+            placeholder="To build design system.."
+          />
+        </div>
+      </div>
+
+      <div class="input__container">
+        <div class="input__label type">Expense in paid plugin (total)</div>
+        <div class="input__box">
+          <select id="expense" class="select__menu type">
+            <option value="blank" disabled selected style="color: #707070">
+              Select expense
+            </option>
+            <option value="None">None</option>
+            <option value="<5">Less than $5</option>
+            <option value="$5-10">$5-10</option>
+            <option value="$11-20">$11-20</option>
+            <option value="$21-30">$21-30</option>
+            <option value="$31-50">$31-50</option>
+            <option value="$51-100">$51-100</option>
+            <option value="$100+">$100+</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom__bar">
+      <button class="button button--primary" id="submit">Submit</button>
     </div>
 
     <script>
-      const surveyInputsEl = document.querySelectorAll('.survey-input')
-      
-      document.getElementById('run').addEventListener('click', () => {
+      const emailEl = document.getElementById('email')
+      const organizationTypeEl = document.getElementById('organization_type')
+      const organizationSizeEl = document.getElementById('organization_size')
+      const usageEl = document.getElementById('usage')
+      const expenseEl = document.getElementById('expense')
+
+      document.getElementById('submit').addEventListener('click', () => {
+        if (
+          !emailEl.value ||
+          organizationTypeEl.value === 'blank' ||
+          organizationSizeEl.value === 'blank' ||
+          !usageEl.value ||
+          expenseEl.value === 'blank'
+        ) {
+          alert('Please fill in all the fields')
+          return
+        }
+
         const surveyInputs = {
           type: 'running',
-          email: surveyInputsEl[0].value,
-          companyCategory: surveyInputsEl[1].value,
+          email: emailEl.value,
+          organization_type: organizationTypeEl.value,
+          organization_size: organizationSizeEl.value,
+          usage: usageEl.value,
+          expense: expenseEl.value,
         }
-        
-        parent.postMessage({ pluginMessage: { type: 'run', data: surveyInputs } }, '*')
+
+        parent.postMessage(
+          { pluginMessage: { type: 'instruction', data: surveyInputs } },
+          '*'
+        )
       })
+
+      onmessage = (event) => {
+        const { pluginMessage } = event.data
+
+        if (pluginMessage.type !== 'setting') return
+
+        const { key, value } = pluginMessage
+        document.getElementById(key).value = value
+      }
     </script>
   </body>
 </html>

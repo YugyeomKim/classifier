@@ -5,36 +5,250 @@
       href="https://cdn.jsdelivr.net/gh/thomas-lowry/figma-plugin-ds/dist/figma-plugin-ds.css"
     />
     <style>
-      div.title {
-        font-size: 24px;
-        text-align: center;
-        padding: 10px 0px 10px 0px;
+      .Container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+
+        gap: 5px;
+
+        /* height: 280px; */
+        width: 100%;
+        padding: 15px 13px 13px 13px;
+      }
+
+      .type__grey {
+        color: #707070;
+        margin-bottom: 5px;
+        font-size: 10px;
+      }
+
+      .input__box {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+      }
+
+      .input__label {
+        font-size: 8px;
+        color: #000;
+      }
+
+      .input__box {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+
+        width: 194px;
+        height: 32px;
+        border-radius: 5px;
+        border: 1px solid #707070;
+        padding: 0px 5px 0px 5px;
+
+        font-size: 10px;
+      }
+
+      .input__box input {
+        flex-grow: 1;
+
+        border: none;
+      }
+
+      .input__box select {
+        flex-grow: 1;
+
+        border: none;
+      }
+
+      .type__grey {
+        color: #707070;
+        font-size: 10px;
+      }
+
+      .instruction {
+        width: 194px;
+        padding: 7px;
+        background: #d9d9d9;
+
+        font-size: 8px;
+        line-height: normal;
+      }
+
+      .bottom__bar {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+
+        position: absolute;
+        bottom: 0px;
+
+        width: 100%;
+        height: 40px;
+        padding: 5px;
+        border-top: 1px solid #ebebeb;
+
+        background: #ffffff;
+      }
+
+      #submit {
+        width: 76px;
+        height: 28px;
+        display: flex;
+        justify-content: center;
       }
     </style>
   </head>
 
   <body>
-    <div class="type type--xlarge type--bold title">Ending Survey</div>
+    <div class="Container">
+      <div class="type type--small type__grey">
+        Kindly report for our improvement!
+      </div>
 
-    <div class="container">
-      <label for="survey1">survey1</label>  
-      <input type="text" class="survey-input" name="survey1" id="survey1">
-      <label for="survey2">survey2</label>  
-      <input type="text" class="survey-input" name="survey2" id="survey2">
+      <div class="input__container">
+        <div class="input__label type">
+          Which UI Component should be added #1?
+        </div>
+        <div class="input__box">
+          <select id="hope1" class="select__menu type">
+            <option value="blank" disabled selected style="color: #707070">
+              Select component
+            </option>
+            <option value="banner">Banner</option>
+            <option value="bottom_navigation">Bottom Navigation</option>
+            <option value="bottom_app_bar">Bottom App Bar</option>
+            <option value="home_indicator">Home Indicator</option>
+            <option value="text_field">Text Field</option>
+            <option value="tab">Tab</option>
+            <option value="top_app_bar">Top App Bar</option>
+            <option value="modal">Modal</option>
+            <option value="divider">Divider</option>
+            <option value="card">Card</option>
+            <option value="carousel">Carousel</option>
+            <option value="image_list">Image List</option>
+            <option value="text_list">Text List</option>
+            <option value="chip">Chip</option>
+            <option value="checkbox">Checkbox</option>
+            <option value="floating_action_button">
+              Floating Action Button
+            </option>
+            <option value="switch">Switch</option>
+          </select>
+        </div>
+      </div>
 
-      <button id="submit">submit</button>
+      <div class="input__container">
+        <div class="input__label type">
+          Which UI Component should be added #2?
+        </div>
+        <div class="input__box">
+          <select id="hope2" class="select__menu type">
+            <option value="blank" disabled selected style="color: #707070">
+              Select component
+            </option>
+            <option value="N/A">N/A</option>
+            <option value="banner">Banner</option>
+            <option value="bottom_navigation">Bottom Navigation</option>
+            <option value="bottom_app_bar">Bottom App Bar</option>
+            <option value="home_indicator">Home Indicator</option>
+            <option value="text_field">Text Field</option>
+            <option value="tab">Tab</option>
+            <option value="top_app_bar">Top App Bar</option>
+            <option value="modal">Modal</option>
+            <option value="divider">Divider</option>
+            <option value="card">Card</option>
+            <option value="carousel">Carousel</option>
+            <option value="image_list">Image List</option>
+            <option value="text_list">Text List</option>
+            <option value="chip">Chip</option>
+            <option value="checkbox">Checkbox</option>
+            <option value="floating_action_button">
+              Floating Action Button
+            </option>
+            <option value="switch">Switch</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="input__container">
+        <div class="input__label type">
+          Which UI Component should be added #3?
+        </div>
+        <div class="input__box">
+          <select id="hope3" class="select__menu type">
+            <option value="blank" disabled selected style="color: #707070">
+              Select component
+            </option>
+            <option value="N/A">N/A</option>
+            <option value="banner">Banner</option>
+            <option value="bottom_navigation">Bottom Navigation</option>
+            <option value="bottom_app_bar">Bottom App Bar</option>
+            <option value="home_indicator">Home Indicator</option>
+            <option value="text_field">Text Field</option>
+            <option value="tab">Tab</option>
+            <option value="top_app_bar">Top App Bar</option>
+            <option value="modal">Modal</option>
+            <option value="divider">Divider</option>
+            <option value="card">Card</option>
+            <option value="carousel">Carousel</option>
+            <option value="image_list">Image List</option>
+            <option value="text_list">Text List</option>
+            <option value="chip">Chip</option>
+            <option value="checkbox">Checkbox</option>
+            <option value="floating_action_button">
+              Floating Action Button
+            </option>
+            <option value="switch">Switch</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="input__container">
+        <div class="input__label type">Feedback</div>
+        <div class="input__box">
+          <input
+            id="feedback"
+            type="input"
+            class="type"
+            placeholder="to build design system.."
+          />
+        </div>
+      </div>
+
+      <div class="type type--small type__grey instruction">
+        UICE is now available as partial & free plugin. <br />
+        If you are interested in using full UI Component <br />
+        supported version, please contact below :) <br />
+        📧 hoodie0512@gmail.com
+      </div>
+    </div>
+
+    <div class="bottom__bar">
+      <button class="button button--primary" id="submit">Submit</button>
     </div>
 
     <script>
-      const surveyInputsEl = document.querySelectorAll('.survey-input')
-      
+      const hope1El = document.getElementById('hope1')
+      const hope2El = document.getElementById('hope2')
+      const hope3El = document.getElementById('hope3')
+      const feedbackEl = document.getElementById('feedback')
+
       document.getElementById('submit').addEventListener('click', () => {
         const surveyInputs = {
-          survey1: surveyInputsEl[0].value,
-          survey2: surveyInputsEl[1].value,
+          hope1: hope1El.value,
+          hope2: hope2El.value,
+          hope3: hope3El.value,
+          feedback: feedbackEl.value,
         }
-        
-        parent.postMessage({ pluginMessage: { type: 'submit', data: surveyInputs } }, '*')
+
+        parent.postMessage(
+          { pluginMessage: { type: 'submit', data: surveyInputs } },
+          '*'
+        )
       })
     </script>
   </body>

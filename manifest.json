@@ -1,5 +1,5 @@
 {
-  "name": "classifier",
+  "name": "UICE",
   "id": "1282392620884377815",
   "api": "1.0.0",
   "main": "code.js",
@@ -8,16 +8,27 @@
   "editorType": ["figma"],
   "ui": {
     "tutorial": "views/tutorial.html",
+    "start": "views/start.html",
     "setting": "views/setting.html",
+    "runInstruction": "views/run-instruction.html",
+    "loading": "views/loading.html",
     "result": "views/result.html",
     "endingSurvey": "views/ending-survey.html"
   },
   "menu": [
     { "name": "How to use", "command": "howToUse" },
-    { "name": "Run", "command": "run" }
+    { "name": "Run", "command": "run" },
+    {"separator": true},
+    { "name": "Clean data", "command": "clean" }
   ],
   "networkAccess": {
-    "allowedDomains": ["none"],
+    "allowedDomains": [
+      "https://s2dlab.click",
+      "https://cdn.jsdelivr.net/gh/thomas-lowry/figma-plugin-ds/dist/figma-plugin-ds.css",
+      "https://rsms.me",
+      "https://i.imgur.com"
+    ],
+    "reasoning": "I don't know why I can't access to my server",
     "devAllowedDomains": ["http://localhost:3000"]
   }
 }

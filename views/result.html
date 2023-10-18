@@ -5,30 +5,233 @@
       href="https://cdn.jsdelivr.net/gh/thomas-lowry/figma-plugin-ds/dist/figma-plugin-ds.css"
     />
     <style>
-      div.title {
-        font-size: 24px;
-        text-align: center;
-        padding: 10px 0px 10px 0px;
+      .Container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+
+        height: 313px;
+
+        overflow-y: auto;
+      }
+
+      .type__grey {
+        color: #707070;
+        font-size: 8px;
+      }
+
+      .instruction {
+        width: 200px;
+        padding: 7px;
+        background: #d9d9d9;
+
+        margin: 10px 0px;
+      }
+
+      .bottom__bar {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+
+        position: absolute;
+        bottom: 0px;
+
+        width: 100%;
+        height: 40px;
+        padding: 5px;
+        border-top: 1px solid #ebebeb;
+
+        background: #ffffff;
+      }
+
+      #buttonlist {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+
+        width: 100%;
+
+        border-top: 1px solid #ebebeb;
+      }
+
+      .row {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-self: flex-start;
+
+        padding: 4px 8px;
+        gap: 4px;
+        width: 100%;
+        height: 27px;
+
+        border-bottom: 1px solid #ebebeb;
+      }
+
+      .image__container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        width: 80px;
+        height: 20px;
+      }
+
+      .typediv {
+        height: 20px;
+        width: 100px;
+        margin: 0px;
+        line-height: 20px;
+
+        color: #707070;
+        font-size: 8px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .checkbox__label {
+        padding: 0px;
+        margin: 0px;
+      }
+
+      .checkbox__label::before {
+        margin: 0px;
+      }
+
+      .checkbox__box {
+        position: absolute;
+      }
+
+      .new__clickable {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-self: flex-start;
+
+        gap: 4px;
+        width: calc(100% - 23px);
+        height: 27px;
+
+        cursor: pointer;
+      }
+
+      #adjust {
+        width: 76px;
+        height: 28px;
+        display: flex;
+        justify-content: center;
       }
     </style>
   </head>
 
   <body>
-    <div class="type type--xlarge type--bold title">Result</div>
-
-    <h6>설명</h6>
-
-    <div class="container">
-      <div>
-        no list
+    <div class="Container">
+      <div class="type type--small type__grey instruction">
+        Click the checkbox to adjust extraction result.<br />
+        By clicking a button you could zoom-in<br />
+        to the original UI frame where it was extracted.<br />
       </div>
 
-      <button id="adjust">adjust</button>
+      <div class="type type--small" id="buttonlist"></div>
+    </div>
+
+    <div class="bottom__bar">
+      <button class="button button--primary" id="adjust">Adjust</button>
     </div>
 
     <script>
+      onmessage = (event) => {
+        const { pluginMessage } = event.data
+
+        if (pluginMessage.type !== 'result') return
+
+        const { frameArray, thumbnails, elementNames } = pluginMessage
+
+        if (frameArray.length === 0) {
+          document.getElementById('buttonlist').innerText = 'No button found'
+        } else {
+          document.getElementById('buttonlist').innerText = ''
+        }
+
+        for (let i = 0; i < frameArray.length; i++) {
+          const blob = new Blob([thumbnails[i]], { type: 'image/png' })
+          const url = URL.createObjectURL(blob)
+          const img = new Image()
+          img.src = url
+          // Here I want to log the width and height of the image of the src
+          img.addEventListener('load', () => {
+            if (img.width / img.height > 4) {
+              img.style.width = '80px'
+            } else {
+              img.style.height = '20px'
+            }
+          })
+
+          const imageContainer = document.createElement('div')
+          imageContainer.className = 'image__container'
+          imageContainer.style.width = '80px'
+          imageContainer.style.height = '20px'
+
+          imageContainer.appendChild(img)
+
+          const typeDiv = document.createElement('p')
+          typeDiv.className = 'type type--large typediv'
+          typeDiv.innerText = elementNames[i]
+
+          const checkboxDiv = document.createElement('div')
+          checkboxDiv.className = 'checkbox'
+          const checkbox = document.createElement('input')
+          checkbox.id = 'checkbox' + i
+          checkbox.type = 'checkbox'
+          checkbox.className = 'checkbox__box'
+          checkbox.checked = true
+          const checkboxLabel = document.createElement('label')
+          checkboxLabel.htmlFor = 'checkbox' + i
+          checkboxLabel.className = 'checkbox__label'
+
+          checkboxDiv.appendChild(checkbox)
+          checkboxDiv.appendChild(checkboxLabel)
+
+          const newClickable = document.createElement('div')
+          newClickable.className = 'new__clickable'
+          newClickable.id = i
+
+          newClickable.addEventListener('click', () => {
+            parent.postMessage(
+              { pluginMessage: { type: 'zoom-element', index: newClickable.id } },
+              '*'
+            )
+          })
+
+          newClickable.appendChild(imageContainer)
+          newClickable.appendChild(typeDiv)
+
+          const newRow = document.createElement('div')
+          newRow.className = 'row'
+
+          newRow.appendChild(newClickable)
+          newRow.appendChild(checkboxDiv)
+
+          document.getElementById('buttonlist').appendChild(newRow)
+
+
+        }
+      }
+
       document.getElementById('adjust').addEventListener('click', () => {
-        parent.postMessage({ pluginMessage: { type: 'ending-survey' } }, '*')
+        const checkboxes = document.getElementsByClassName('checkbox__box')
+        const notChecked = []
+        for (let i = 0; i < checkboxes.length; i++) {
+          if (!checkboxes[i].checked) {
+            notChecked.push(i)
+          }
+        }
+
+        parent.postMessage({ pluginMessage: { type: 'wrapup', data: notChecked } }, '*')
       })
     </script>
   </body>

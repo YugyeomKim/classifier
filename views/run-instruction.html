@@ -1,0 +1,83 @@
+<html>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/thomas-lowry/figma-plugin-ds/dist/figma-plugin-ds.css"
+    />
+    <style>
+      .Container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-evenly;
+
+        height: 313px;
+      }
+
+      .type__grey {
+        color: #707070;
+        font-size: 10px;
+      }
+
+      .align__text {
+        text-align: center;
+      }
+
+      .bottom__bar {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+
+        position: absolute;
+        bottom: 0px;
+
+        width: 100%;
+        height: 40px;
+        padding: 5px;
+        border-top: 1px solid #ebebeb;
+
+        background: #ffffff;
+      }
+
+      #submit {
+        width: 76px;
+        height: 28px;
+        display: flex;
+        justify-content: center;
+      }
+
+      img {
+        width: 155px;
+        height: 132px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="Container">
+      <div class="type type--small type__grey">
+        Select UI frame first to extract buttons
+      </div>
+
+      <img src="https://i.imgur.com/lmWAUtJ.png" alt="instruction" />
+
+      <div class="type type--small align__text type__grey">
+        Please select at least 1 UI frame.<br />
+        Selected frame must contain buttons.<br />
+        If not, error such as<br />
+        empty section may occur.<br />
+      </div>
+    </div>
+
+    <div class="bottom__bar">
+      <button class="button button--primary" id="submit">Submit</button>
+    </div>
+
+    <script>
+      document.getElementById('submit').onclick = function () {
+        parent.postMessage({ pluginMessage: { type: 'run' } }, '*')
+      }
+    </script>
+  </body>
+</html>
