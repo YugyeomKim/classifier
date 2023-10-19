@@ -1,6 +1,6 @@
 {
-  "name": "UICE",
-  "id": "1282392620884377815",
+  "name": "UICE - UI Component Extractor",
+  "id": "1296894765508402752",
   "api": "1.0.0",
   "main": "code.js",
   "capabilities": [],
@@ -28,7 +28,6 @@
       "https://rsms.me",
       "https://i.imgur.com"
     ],
-    "reasoning": "I don't know why I can't access to my server",
     "devAllowedDomains": ["http://localhost:3000"]
   }
 }
