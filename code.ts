@@ -33,37 +33,52 @@ const getZIndex = (node: SceneNode) => {
  * @param node
  * @returns
  */
-const getClass = async (node: SceneNode) => {
-  const bytes = await node
-    .exportAsync({ format: 'JPG', contentsOnly: false })
-    .catch((e) => {
-      console.error(`${node.name}: ${e}`)
-    })
+const getClass = async (nodes: readonly SceneNode[]) => {
+  const exportResults = await Promise.all(
+    nodes.map((node) =>
+      node
+        .exportAsync({ format: 'JPG', contentsOnly: false })
+        .then((value) => Array.from(value))
+        .catch((e) => {
+          console.error(`${node.name}: ${e}`)
+        })
+    )
+  )
 
-  if (!bytes) {
-    return 'error'
+  const byteList = exportResults.filter((imgs) =>
+    Array.isArray(imgs)
+  ) as number[][]
+  if (!byteList) {
+    return ['error']
   }
 
-  /**
-   * Fetch result from the model to predict the class
-   */
-  const modelResult = await fetch(`${SERVER}/predict`, {
-    method: 'POST',
-    body: bytes,
-  })
+  try {
+    /**
+     * Fetch result from the model to predict the class
+     */
+    const modelResult = await fetch(`${SERVER}/predict`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(byteList),
+    })
 
-  if (modelResult.ok) {
-    const result = await modelResult.text()
-    const label = indexToLabel(parseInt(result))
+    if (!modelResult.ok) {
+      console.error(modelResult.statusText)
 
-    console.log(`${node.name}: ${label}`)
+      return ['error']
+    }
+
+    const result = await modelResult.json()
+
+    const label = result.map((index: number) => indexToLabel(index))
 
     return label
-  } else {
-    const errorMessage = await modelResult.text()
-    console.error(`${node.name}: ${errorMessage}`)
+  } catch (error) {
+    console.error(error)
 
-    return 'error'
+    return ['error']
   }
 }
 
@@ -83,7 +98,7 @@ const getElementsFromChildren = async (
   if (!('children' in node)) return []
 
   const children = node.children
-  const classes = await Promise.all(children.map(getClass))
+  const classes = await getClass(children)
 
   const buttonFromChildren = await Promise.all(
     children
@@ -180,7 +195,6 @@ let frameArray: FrameNode[] = []
 let originalPage: PageNode = figma.currentPage
 /** Copied new elements */
 let newElementArray: SceneNode[] = []
-
 
 async function main() {
   const frames = figma.currentPage.selection
@@ -392,7 +406,7 @@ async function main() {
   section.resizeWithoutConstraints(maxX + 20, y)
 
   figma.currentPage = componentLibraryPage
-  
+
   const thumbnails = await Promise.all(
     newElementArray.map((element) =>
       element.exportAsync({
@@ -529,16 +543,18 @@ switch (figma.command) {
     break
 
   case 'clean':
-    figma.clientStorage.keysAsync().then((keys) => {
-      keys.map((key) => {
-        figma.clientStorage.deleteAsync(key)
+    figma.clientStorage
+      .keysAsync()
+      .then((keys) => {
+        keys.map((key) => {
+          figma.clientStorage.deleteAsync(key)
+        })
       })
-    }).then(() => [
-      figma.closePlugin("Cleaned all the data. You're good to go!")
-    ])
+      .then(() => [
+        figma.closePlugin("Cleaned all the data. You're good to go!"),
+      ])
 
     break
-
 
   default:
     figma.showUI(__uiFiles__.start, { width: 319, height: 360 })
